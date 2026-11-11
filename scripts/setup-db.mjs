@@ -3,8 +3,12 @@ import { readFileSync } from "node:fs";
 import postgres from "postgres";
 
 const url = process.env.DATABASE_URL;
-if (!url) throw new Error("DATABASE_URL is not set");
-const sql = postgres(url, { onnotice: () => {} });
+if (!url) {
+  // During a build without a database (for example CI) there is nothing to set up.
+  if (process.argv.includes("--if-configured")) process.exit(0);
+  throw new Error("DATABASE_URL is not set");
+}
+const sql = postgres(url, { prepare: false, onnotice: () => {} });
 
 await sql.unsafe(readFileSync(new URL("./schema.sql", import.meta.url), "utf8"));
 

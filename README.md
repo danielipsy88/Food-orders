@@ -12,7 +12,9 @@
 - האתר ללקוחות: `/`
 - מסך הניהול: `/admin`
 
-## פריסה
+## פריסה (Vercel + Neon)
 
-כל אחסון שמריץ Next.js (למשל Vercel) עם מסד Postgres (למשל Supabase או Neon).
-יש להגדיר את שלושת משתני הסביבה ולהריץ `npm run db:setup` פעם אחת מול המסד.
+1. ב-Vercel: Add New → Project, ולבחור את הריפו.
+2. בפרויקט: Storage → Create Database → Neon. זה מגדיר את `DATABASE_URL` אוטומטית.
+3. ב-Settings → Environment Variables להוסיף `ADMIN_PASSWORD` ו-`AUTH_SECRET`.
+4. Redeploy. הטבלאות נוצרות אוטומטית בזמן ה-build.
