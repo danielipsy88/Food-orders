@@ -12,9 +12,9 @@
 - האתר ללקוחות: `/`
 - מסך הניהול: `/admin`
 
-## פריסה (Vercel + Neon)
+## פריסה (Netlify + Neon)
 
-1. ב-Vercel: Add New → Project, ולבחור את הריפו.
-2. בפרויקט: Storage → Create Database → Neon. זה מגדיר את `DATABASE_URL` אוטומטית.
-3. ב-Settings → Environment Variables להוסיף `ADMIN_PASSWORD` ו-`AUTH_SECRET`.
-4. Redeploy. הטבלאות נוצרות אוטומטית בזמן ה-build.
+1. ב-Neon: ליצור פרויקט ולהעתיק את ה-Connection string.
+2. ב-Netlify: Add new project → Import an existing project, ולבחור את הריפו.
+3. להגדיר שלושה משתני סביבה: `DATABASE_URL` (המחרוזת מ-Neon), `ADMIN_PASSWORD` ו-`AUTH_SECRET`.
+4. Deploy. הטבלאות נוצרות אוטומטית בזמן ה-build.
