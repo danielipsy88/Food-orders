@@ -11,6 +11,8 @@ create table if not exists settings (
   edit_window_hours int not null default 12
 );
 insert into settings (id) values (1) on conflict do nothing;
+-- Weekdays on which food can be collected or delivered (0 = Sunday ... 6 = Saturday).
+alter table settings add column if not exists pickup_days int[] not null default '{0,1,2,3,4,5,6}';
 
 create table if not exists dishes (
   id serial primary key,

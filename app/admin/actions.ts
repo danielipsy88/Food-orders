@@ -103,6 +103,10 @@ export async function saveSettings(_prev: string | null, form: FormData): Promis
   const close = int("close_hour");
   const lead = int("lead_minutes");
   const edit = int("edit_window_hours");
+  const days = [...new Set(form.getAll("pickup_days").map(Number))].filter(
+    (d) => Number.isInteger(d) && d >= 0 && d <= 6,
+  );
+  if (!days.length) return "נא לבחור לפחות יום אחד לאיסוף ומשלוחים";
   if (!(open >= 0 && close <= 24 && open < close)) return "שעות האיסוף לא תקינות";
   if (!(lead >= 0 && lead <= 7 * 24 * 60)) return "זמן ההכנה לא תקין";
   if (!(edit >= 0 && edit <= 24 * 14)) return "חלון השינויים לא תקין";
@@ -115,7 +119,8 @@ export async function saveSettings(_prev: string | null, form: FormData): Promis
       pickup_address = ${text("pickup_address", 200)},
       closed_message = ${text("closed_message", 300)},
       open_hour = ${open}, close_hour = ${close},
-      lead_minutes = ${lead}, edit_window_hours = ${edit}
+      lead_minutes = ${lead}, edit_window_hours = ${edit},
+      pickup_days = ${`{${days.join(",")}}`}::int[]
     where id = 1`;
   revalidatePath("/", "layout");
   return "נשמר";

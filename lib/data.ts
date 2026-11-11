@@ -11,6 +11,7 @@ export type Settings = {
   close_hour: number;
   lead_minutes: number;
   edit_window_hours: number;
+  pickup_days: number[];
 };
 
 export type Dish = {

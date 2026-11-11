@@ -25,6 +25,18 @@ export default function SettingsForm({ s }: { s: Settings }) {
         <label className={label} htmlFor="pickup_address">כתובת לאיסוף עצמי</label>
         <input id="pickup_address" name="pickup_address" dir="auto" className={input} defaultValue={s.pickup_address} />
       </div>
+      <fieldset>
+        <legend className={label}>ימי איסוף ומשלוחים</legend>
+        <div className="flex flex-wrap gap-2">
+          {["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"].map((name, i) => (
+            <label key={i} className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm">
+              <input type="checkbox" name="pickup_days" value={i} defaultChecked={s.pickup_days.includes(i)} />
+              {name}
+            </label>
+          ))}
+        </div>
+        <p className="mt-1 text-sm text-stone-500">הלקוח יוכל לבחור מועד רק בימים המסומנים.</p>
+      </fieldset>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className={label} htmlFor="open_hour">איסוף משעה</label>
