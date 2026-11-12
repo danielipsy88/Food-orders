@@ -1,11 +1,13 @@
 import OrderForm from "@/components/OrderForm";
 import { getDishes, getSettings } from "@/lib/data";
 import { getSlots } from "@/lib/slots";
+import { recordVisit } from "@/lib/visits";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   const [settings, dishes] = await Promise.all([getSettings(), getDishes()]);
+  await recordVisit((await searchParams).src);
 
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-6">

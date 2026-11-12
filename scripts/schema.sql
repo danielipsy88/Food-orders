@@ -53,3 +53,13 @@ create table if not exists order_items (
 );
 create index if not exists order_items_order_idx on order_items (order_id);
 create index if not exists orders_scheduled_idx on orders (scheduled_at);
+
+-- Anonymous visit counter: one row per visitor, day and source. No IP addresses are stored.
+create table if not exists visits (
+  day date not null,
+  visitor text not null,
+  source text not null default '',
+  country text not null default '',
+  hits int not null default 1,
+  primary key (day, visitor, source)
+);

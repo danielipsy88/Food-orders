@@ -7,6 +7,7 @@ const tabs = [
   { href: "/admin", label: "הזמנות" },
   { href: "/admin/summary", label: "מה להכין" },
   { href: "/admin/menu", label: "תפריט" },
+  { href: "/admin/stats", label: "סטטיסטיקה" },
   { href: "/admin/settings", label: "הגדרות" },
 ];
 
