@@ -63,3 +63,6 @@ create table if not exists visits (
   hits int not null default 1,
   primary key (day, visitor, source)
 );
+
+-- A sold-out dish stays on the customer menu but cannot be ordered.
+alter table dishes add column if not exists sold_out boolean not null default false;

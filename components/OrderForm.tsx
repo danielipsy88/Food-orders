@@ -42,7 +42,7 @@ export default function OrderForm({
     initialDay?.times.includes(initial?.time ?? "") ? initial!.time : "",
   );
 
-  const chosen = useMemo(() => dishes.filter((d) => qty[d.id] > 0), [dishes, qty]);
+  const chosen = useMemo(() => dishes.filter((d) => !d.sold_out && qty[d.id] > 0), [dishes, qty]);
   const count = chosen.reduce((n, d) => n + qty[d.id], 0);
   const total = chosen.reduce((n, d) => n + qty[d.id] * d.price, 0);
 
@@ -77,7 +77,10 @@ export default function OrderForm({
         {dishes.map((d) => {
           const n = qty[d.id] ?? 0;
           return (
-            <li key={d.id} className={`${card} flex gap-3 p-3 ${n ? "border-brand/60" : ""}`}>
+            <li
+              key={d.id}
+              className={`${card} flex gap-3 p-3 ${n ? "border-brand/60" : ""} ${d.sold_out ? "opacity-60" : ""}`}
+            >
               {d.has_image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -98,7 +101,11 @@ export default function OrderForm({
                 )}
                 <div className="mt-auto flex items-center justify-between pt-2">
                   <span className="font-semibold text-brand">{money(d.price)}</span>
-                  {n === 0 ? (
+                  {d.sold_out ? (
+                    <span className="rounded-full bg-stone-200 px-3 py-1.5 text-sm font-semibold text-stone-600">
+                      נגמר
+                    </span>
+                  ) : n === 0 ? (
                     <button
                       type="button"
                       onClick={() => change(d.id, 1)}

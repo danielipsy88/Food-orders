@@ -20,6 +20,7 @@ export type Dish = {
   description: string;
   price: number;
   visible: boolean;
+  sold_out: boolean;
   has_image: boolean;
   v: number;
 };
@@ -52,7 +53,7 @@ export async function getSettings() {
 
 export async function getDishes(includeHidden = false) {
   const rows = await sql`
-    select id, name, description, price, visible,
+    select id, name, description, price, visible, sold_out,
            (image is not null) as has_image,
            extract(epoch from updated_at)::int as v
     from dishes
@@ -63,7 +64,7 @@ export async function getDishes(includeHidden = false) {
 
 export async function getDish(id: number) {
   const [row] = await sql`
-    select id, name, description, price, visible,
+    select id, name, description, price, visible, sold_out,
            (image is not null) as has_image,
            extract(epoch from updated_at)::int as v
     from dishes where id = ${id} and deleted_at is null`;

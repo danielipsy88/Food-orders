@@ -17,7 +17,7 @@ export default async function EditOrder({ params }: PageProps<"/o/[token]/edit">
   if (!order) notFound();
   if (!order.editable) redirect(`/o/${order.token}`);
 
-  const available = new Set(dishes.map((d) => d.id));
+  const available = new Set(dishes.filter((d) => !d.sold_out).map((d) => d.id));
   const items = Object.fromEntries(
     order.items.filter((i) => available.has(i.dish_id)).map((i) => [i.dish_id, i.qty]),
   );
@@ -33,7 +33,7 @@ export default async function EditOrder({ params }: PageProps<"/o/[token]/edit">
       </header>
       {dropped.length > 0 && (
         <p className="mb-4 rounded-xl bg-amber-100 px-3 py-2 text-sm">
-          המנות הבאות כבר לא בתפריט ויוסרו אם ההזמנה תישמר מחדש:{" "}
+          המנות הבאות נגמרו או ירדו מהתפריט, ויוסרו אם ההזמנה תישמר מחדש:{" "}
           {dropped.map((i) => i.name).join(", ")}
         </p>
       )}

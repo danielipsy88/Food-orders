@@ -14,7 +14,7 @@ const tabs = [
 export default function AdminNav({ newCount }: { newCount: number }) {
   const path = usePathname();
   return (
-    <nav className="flex gap-1 overflow-x-auto">
+    <nav className="flex justify-between gap-0.5 overflow-x-auto">
       {tabs.map((t) => {
         const active = t.href === "/admin" ? path === "/admin" : path.startsWith(t.href);
         return (
@@ -22,7 +22,7 @@ export default function AdminNav({ newCount }: { newCount: number }) {
             key={t.href}
             href={t.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium ${
               active ? "bg-ink text-white" : "text-stone-700 hover:bg-stone-200"
             }`}
           >

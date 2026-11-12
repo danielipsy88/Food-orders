@@ -75,9 +75,32 @@ export async function saveDish(input: DishInput): Promise<string | null> {
   redirect("/admin/menu");
 }
 
-export async function setDishVisible(id: number, visible: boolean) {
+export type DishState = "available" | "soldout" | "hidden";
+
+export async function setDishState(id: number, state: DishState) {
   await requireAdmin();
-  await sql`update dishes set visible = ${visible}, updated_at = now() where id = ${id}`;
+  await sql`
+    update dishes set visible = ${state !== "hidden"}, sold_out = ${state === "soldout"},
+      updated_at = now()
+    where id = ${id}`;
+  revalidatePath("/", "layout");
+}
+
+/** Moves a dish one place up or down the menu. */
+export async function moveDish(id: number, direction: "up" | "down") {
+  await requireAdmin();
+  await sql.begin(async (tx) => {
+    const rows = await tx`select id from dishes where deleted_at is null order by sort, id for update`;
+    const ids = rows.map((r) => r.id as number);
+    const from = ids.indexOf(id);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (from < 0 || to < 0 || to >= ids.length) return;
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    // Renumber everything so the order stays unambiguous even if old values collided.
+    for (let i = 0; i < ids.length; i++) {
+      await tx`update dishes set sort = ${i} where id = ${ids[i]}`;
+    }
+  });
   revalidatePath("/", "layout");
 }
 

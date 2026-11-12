@@ -55,9 +55,9 @@ async function validate(input: OrderInput): Promise<{ error: string } | { clean:
   // Prices always come from the database, never from the browser.
   const dishes = await sql`
     select id, name, price from dishes
-    where id in ${sql([...wanted.keys()])} and visible and deleted_at is null`;
+    where id in ${sql([...wanted.keys()])} and visible and not sold_out and deleted_at is null`;
   if (dishes.length !== wanted.size) {
-    return { error: "אחת המנות כבר לא זמינה. נא לרענן את העמוד ולבחור מחדש" };
+    return { error: "אחת המנות נגמרה או ירדה מהתפריט. נא לרענן את העמוד ולבחור מחדש" };
   }
 
   return {
