@@ -86,7 +86,8 @@ export default function OrderForm({
           n > 0
             ? "border-brand bg-[#fff3e8] ring-1 ring-brand"
             : d.off_week
-              ? "border-stone-200 bg-stone-50"
+              ? // A calm sage tint: clearly a different group, without looking disabled.
+                "border-[#d6dcc0] bg-[#f1f3e4]"
               : "border-stone-200 bg-white"
         } ${d.sold_out ? "opacity-60" : ""}`}
       >
@@ -96,7 +97,7 @@ export default function OrderForm({
             src={`/img/${d.id}?v=${d.v}`}
             alt=""
             loading="lazy"
-            className={`size-24 shrink-0 rounded-xl object-cover ${d.off_week ? "saturate-50" : ""}`}
+            className="size-24 shrink-0 rounded-xl object-cover"
           />
         ) : (
           <div className="flex size-24 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-3xl">
