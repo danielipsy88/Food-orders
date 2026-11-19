@@ -102,13 +102,11 @@ export default function OrderForm({
           {d.description && (
             <p className="mt-0.5 text-sm leading-snug text-stone-600">{d.description}</p>
           )}
+          {/* Dishes not sold this week show only name, photo and description. */}
+          {!d.off_week && (
           <div className="mt-auto flex items-center justify-between pt-2">
-            {d.off_week ? <span /> : <span className="font-semibold text-brand">{money(d.price)}</span>}
-            {d.off_week ? (
-              <span className="rounded-full bg-[#efe8f3] px-3 py-1.5 text-sm font-semibold text-[#6b4f7a]">
-                בשבוע אחר
-              </span>
-            ) : d.sold_out ? (
+            <span className="font-semibold text-brand">{money(d.price)}</span>
+            {d.sold_out ? (
               <span className="rounded-full bg-stone-200 px-3 py-1.5 text-sm font-semibold text-stone-600">
                 נגמר
               </span>
@@ -144,6 +142,7 @@ export default function OrderForm({
               </div>
             )}
           </div>
+          )}
         </div>
       </li>
     );
