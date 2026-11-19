@@ -69,3 +69,7 @@ alter table dishes add column if not exists sold_out boolean not null default fa
 
 -- A dish the business makes, but not this week: shown at the end of the menu for variety, cannot be ordered.
 alter table dishes add column if not exists off_week boolean not null default false;
+
+-- How many portions are left. Null means no limit. Orders take from it and cancellations give back;
+-- reaching 0 marks the dish sold out automatically. Never shown to customers.
+alter table dishes add column if not exists stock int check (stock >= 0);

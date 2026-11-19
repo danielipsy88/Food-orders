@@ -82,7 +82,13 @@ export default function OrderForm({
     return (
       <li
         key={d.id}
-        className={`${card} flex gap-3 p-3 ${n ? "border-brand/60" : ""} ${d.sold_out ? "opacity-60" : ""} ${d.off_week ? "bg-stone-50" : ""}`}
+        className={`flex gap-3 rounded-2xl border p-3 shadow-sm transition-colors ${
+          n > 0
+            ? "border-brand bg-[#fff3e8] ring-1 ring-brand"
+            : d.off_week
+              ? "border-stone-200 bg-stone-50"
+              : "border-stone-200 bg-white"
+        } ${d.sold_out ? "opacity-60" : ""}`}
       >
         {d.has_image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -110,25 +116,18 @@ export default function OrderForm({
               <span className="rounded-full bg-stone-200 px-3 py-1.5 text-sm font-semibold text-stone-600">
                 נגמר
               </span>
-            ) : n === 0 ? (
-              <button
-                type="button"
-                onClick={() => change(d.id, 1)}
-                className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white"
-              >
-                הוספה
-              </button>
             ) : (
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   aria-label={`פחות ${d.name}`}
+                  disabled={n === 0}
                   onClick={() => change(d.id, -1)}
-                  className="size-9 rounded-full border border-stone-300 bg-white text-xl leading-none"
+                  className="size-9 rounded-full border border-stone-300 bg-white text-xl leading-none disabled:opacity-35"
                 >
                   −
                 </button>
-                <span className="w-7 text-center font-semibold" aria-live="polite">
+                <span className={`w-7 text-center font-semibold ${n === 0 ? "text-stone-400" : ""}`} aria-live="polite">
                   {n}
                 </span>
                 <button

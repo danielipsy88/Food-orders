@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sql } from "@/lib/db";
 import { checkPassword, endSession, requireAdmin, startSession } from "@/lib/auth";
+import { forceTakeStock, returnStock } from "@/lib/stock";
 
 export async function login(_prev: string | null, form: FormData): Promise<string | null> {
   await new Promise((r) => setTimeout(r, 600)); // slows down password guessing
@@ -19,8 +20,34 @@ export async function logout() {
 
 export async function setOrderStatus(id: number, status: "new" | "done" | "cancelled") {
   await requireAdmin();
-  await sql`update orders set status = ${status}, updated_at = now() where id = ${id}`;
-  revalidatePath("/admin", "layout");
+  await sql.begin(async (tx) => {
+    const [before] = await tx`select status from orders where id = ${id} for update`;
+    if (!before || before.status === status) return;
+    await tx`update orders set status = ${status}, updated_at = now() where id = ${id}`;
+    const items = (await tx`select dish_id, qty from order_items where order_id = ${id}`).map((r) => ({
+      dishId: r.dish_id as number,
+      qty: r.qty as number,
+    }));
+    // A cancelled order holds no portions; reopening it takes them again.
+    if (status === "cancelled") await returnStock(tx, items);
+    else if (before.status === "cancelled") await forceTakeStock(tx, items);
+  });
+  revalidatePath("/", "layout");
+}
+
+/** Sets how many portions are left. Empty means no limit. */
+export async function setDishStock(id: number, form: FormData) {
+  await requireAdmin();
+  const raw = String(form.get("stock") ?? "").trim();
+  const stock = raw === "" ? null : Math.round(Number(raw));
+  if (stock !== null && (!Number.isFinite(stock) || stock < 0 || stock > 100000)) return;
+  if (stock === null) {
+    await sql`update dishes set stock = null, updated_at = now() where id = ${id}`;
+  } else {
+    // Setting a count also decides availability: 0 is sold out, anything more can be ordered.
+    await sql`update dishes set stock = ${stock}, sold_out = ${stock === 0}, updated_at = now() where id = ${id}`;
+  }
+  revalidatePath("/", "layout");
 }
 
 export async function setDeliveryFee(id: number, form: FormData) {

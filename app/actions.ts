@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { TZ } from "@/lib/format";
 import { getOrderByToken, getSettings } from "@/lib/data";
 import { getSlots, isValidSlot } from "@/lib/slots";
+import { OutOfStock, returnStock, takeStock } from "@/lib/stock";
 
 export type OrderInput = {
   items: { dishId: number; qty: number }[];
@@ -79,6 +80,18 @@ async function validate(input: OrderInput): Promise<{ error: string } | { clean:
   };
 }
 
+/** Runs an order transaction; turns a stock shortage into a message for the customer. */
+async function withStock(work: () => Promise<void>): Promise<string | null> {
+  try {
+    await work();
+    return null;
+  } catch (e) {
+    // The count left is never shown to customers, only that there is not enough.
+    if (e instanceof OutOfStock) return `אין מספיק ${e.dishName}. נא להקטין את הכמות או לבחור מנה אחרת`;
+    throw e;
+  }
+}
+
 const scheduledAt = (c: Clean) =>
   sql`(${`${c.date} ${c.time}`}::timestamp at time zone ${TZ})`;
 
@@ -91,7 +104,8 @@ export async function placeOrder(input: OrderInput): Promise<Result> {
   const c = v.clean;
   const token = crypto.randomBytes(16).toString("base64url");
 
-  await sql.begin(async (tx) => {
+  const shortage = await withStock(() => sql.begin(async (tx) => {
+    await takeStock(tx, c.items);
     const [order] = await tx`
       insert into orders (token, name, phone, note, method, address, scheduled_at)
       values (${token}, ${c.name}, ${c.phone}, ${c.note}, ${c.method}, ${c.address}, ${scheduledAt(c)})
@@ -101,9 +115,10 @@ export async function placeOrder(input: OrderInput): Promise<Result> {
         insert into order_items (order_id, dish_id, dish_name, unit_price, qty)
         values (${order.id}, ${i.dishId}, ${i.name}, ${i.price}, ${i.qty})`;
     }
-  });
+  }).then(() => undefined));
+  if (shortage) return { ok: false, error: shortage };
 
-  revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
   return { ok: true, token };
 }
 
@@ -116,7 +131,10 @@ export async function updateOrder(token: string, input: OrderInput): Promise<Res
   if ("error" in v) return { ok: false, error: v.error };
   const c = v.clean;
 
-  await sql.begin(async (tx) => {
+  const shortage = await withStock(() => sql.begin(async (tx) => {
+    // Give back what the order held before, then take what it holds now.
+    await returnStock(tx, existing.items.map((i) => ({ dishId: i.dish_id, qty: i.qty })));
+    await takeStock(tx, c.items);
     // A changed address or method makes the old delivery fee meaningless.
     const keepFee = c.method === "delivery" && c.address === existing.address;
     await tx`
@@ -130,9 +148,10 @@ export async function updateOrder(token: string, input: OrderInput): Promise<Res
         insert into order_items (order_id, dish_id, dish_name, unit_price, qty)
         values (${existing.id}, ${i.dishId}, ${i.name}, ${i.price}, ${i.qty})`;
     }
-  });
+  }).then(() => undefined));
+  if (shortage) return { ok: false, error: shortage };
 
-  revalidatePath("/admin", "layout");
+  revalidatePath("/", "layout");
   return { ok: true, token: existing.token };
 }
 
@@ -140,7 +159,12 @@ export async function cancelOrder(token: string): Promise<Result> {
   const existing = await getOrderByToken(String(token));
   if (!existing) return { ok: false, error: "ההזמנה לא נמצאה" };
   if (!existing.editable) return { ok: false, error: "כבר אי אפשר לבטל את ההזמנה הזו" };
-  await sql`update orders set status = 'cancelled', updated_at = now() where id = ${existing.id}`;
-  revalidatePath("/admin", "layout");
+  await sql.begin(async (tx) => {
+    const done = await tx`
+      update orders set status = 'cancelled', updated_at = now()
+      where id = ${existing.id} and status <> 'cancelled' returning id`;
+    if (done.length) await returnStock(tx, existing.items.map((i) => ({ dishId: i.dish_id, qty: i.qty })));
+  });
+  revalidatePath("/", "layout");
   return { ok: true, token: existing.token };
 }

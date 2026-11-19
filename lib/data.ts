@@ -22,6 +22,8 @@ export type Dish = {
   visible: boolean;
   sold_out: boolean;
   off_week: boolean;
+  /** Portions left; null means no limit. Admin only. */
+  stock: number | null;
   has_image: boolean;
   v: number;
 };
@@ -55,6 +57,8 @@ export async function getSettings() {
 export async function getDishes(includeHidden = false) {
   const rows = await sql`
     select id, name, description, price, visible, sold_out, off_week,
+           -- The customer menu never receives the stock count, not even in the page data.
+           ${includeHidden ? sql`stock` : sql`null::int as stock`},
            (image is not null) as has_image,
            extract(epoch from updated_at)::int as v
     from dishes
@@ -65,7 +69,7 @@ export async function getDishes(includeHidden = false) {
 
 export async function getDish(id: number) {
   const [row] = await sql`
-    select id, name, description, price, visible, sold_out, off_week,
+    select id, name, description, price, visible, sold_out, off_week, stock,
            (image is not null) as has_image,
            extract(epoch from updated_at)::int as v
     from dishes where id = ${id} and deleted_at is null`;

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { btnPrimary, card } from "@/components/ui";
-import { moveDish, setDishState, type DishState, type MenuSection } from "../../actions";
+import { btnGhost, btnPrimary, card, input } from "@/components/ui";
+import { moveDish, setDishState, setDishStock, type DishState, type MenuSection } from "../../actions";
 import { requireAdmin } from "@/lib/auth";
 import { getDishes, type Dish } from "@/lib/data";
 import { money } from "@/lib/format";
@@ -60,6 +60,7 @@ export default async function MenuPage({ searchParams }: PageProps<"/admin/menu"
         <b>מוצגת</b>: אפשר להזמין. <b>נגמרה</b>: הלקוח רואה אותה עם הסימון ״נגמר״ ולא יכול להזמין.{" "}
         <b>לא השבוע</b>: מופיעה בסוף התפריט, תחת ״מנות נוספות״, ואי אפשר להזמין.{" "}
         <b>מוסתרת</b>: לא מופיעה ללקוחות, אבל נשארת שמורה כאן.{" "}
+        <b>מלאי</b>: כמה מנות נשארו. כל הזמנה מורידה מהמספר וכל ביטול מחזיר. כשמגיעים ל-0 המנה עוברת ל״נגמרה״ לבד. ריק = ללא הגבלה. הלקוחות לא רואים את המספר.{" "}
         {grouped ? "החיצים מזיזים מנה בתוך האזור שלה." : "החיצים משנים את סדר המנות באתר."}
       </p>
 
@@ -119,7 +120,14 @@ function DishRow({ d, first, last, withinSection = false }: { d: Dish; first: bo
         )}
         <Link href={`/admin/menu/${d.id}`} className="min-w-0 flex-1">
           <p className={`truncate font-semibold ${current === "hidden" ? "text-stone-500" : ""}`}>{d.name}</p>
-          <p className="text-sm text-stone-500">{money(d.price)} · עריכה</p>
+          <p className="text-sm text-stone-500">
+            {money(d.price)} · עריכה
+            {d.stock !== null && (
+              <span className={`ms-1.5 font-semibold ${d.stock === 0 ? "text-red-700" : "text-olive"}`}>
+                · {d.stock === 0 ? "אזל המלאי" : `נשארו ${d.stock}`}
+              </span>
+            )}
+          </p>
         </Link>
         <div className="flex shrink-0 gap-1">
           {(["up", "down"] as const).map((dir) => (
@@ -147,6 +155,22 @@ function DishRow({ d, first, last, withinSection = false }: { d: Dish; first: bo
           </form>
         ))}
       </div>
+      <form action={setDishStock.bind(null, d.id)} className="mt-2 flex items-center gap-2">
+        <label htmlFor={`stock-${d.id}`} className="shrink-0 text-sm text-stone-600">מלאי</label>
+        <input
+          key={`${d.id}-${d.stock}`}
+          id={`stock-${d.id}`}
+          name="stock"
+          type="number"
+          min={0}
+          inputMode="numeric"
+          dir="ltr"
+          placeholder="ללא הגבלה"
+          defaultValue={d.stock ?? ""}
+          className={`${input} py-1.5 text-right`}
+        />
+        <button className={`${btnGhost} shrink-0 py-1.5`}>שמירה</button>
+      </form>
     </li>
   );
 }
