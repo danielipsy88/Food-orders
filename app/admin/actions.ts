@@ -88,14 +88,33 @@ export async function setDishState(id: number, state: DishState) {
 }
 
 /** Moves a dish one place up or down the menu. */
-export async function moveDish(id: number, direction: "up" | "down") {
+/** Which part of the customer menu a dish appears in. */
+export type MenuSection = "week" | "more" | "hidden";
+
+const sectionOf = (r: { visible: boolean; off_week: boolean }): MenuSection =>
+  !r.visible ? "hidden" : r.off_week ? "more" : "week";
+
+/**
+ * Moves a dish one place up or down the menu. With `withinSection`, it swaps with the
+ * nearest dish in the same customer-menu section, so the move is visible in that view.
+ */
+export async function moveDish(id: number, direction: "up" | "down", withinSection = false) {
   await requireAdmin();
   await sql.begin(async (tx) => {
-    const rows = await tx`select id from dishes where deleted_at is null order by sort, id for update`;
+    const rows = await tx`
+      select id, visible, off_week from dishes where deleted_at is null order by sort, id for update`;
     const ids = rows.map((r) => r.id as number);
     const from = ids.indexOf(id);
-    const to = direction === "up" ? from - 1 : from + 1;
-    if (from < 0 || to < 0 || to >= ids.length) return;
+    if (from < 0) return;
+    const step = direction === "up" ? -1 : 1;
+    let to = from + step;
+    if (withinSection) {
+      const section = sectionOf(rows[from] as unknown as { visible: boolean; off_week: boolean });
+      while (to >= 0 && to < ids.length && sectionOf(rows[to] as unknown as { visible: boolean; off_week: boolean }) !== section) {
+        to += step;
+      }
+    }
+    if (to < 0 || to >= ids.length) return;
     [ids[from], ids[to]] = [ids[to], ids[from]];
     // Renumber everything so the order stays unambiguous even if old values collided.
     for (let i = 0; i < ids.length; i++) {
