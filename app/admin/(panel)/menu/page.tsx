@@ -8,10 +8,12 @@ import { money } from "@/lib/format";
 const states: { key: DishState; label: string; on: string }[] = [
   { key: "available", label: "מוצגת", on: "bg-olive text-white" },
   { key: "soldout", label: "נגמרה", on: "bg-amber-500 text-white" },
+  { key: "offweek", label: "לא השבוע", on: "bg-[#6b4f7a] text-white" },
   { key: "hidden", label: "מוסתרת", on: "bg-stone-500 text-white" },
 ];
 
-const stateOf = (d: Dish): DishState => (!d.visible ? "hidden" : d.sold_out ? "soldout" : "available");
+const stateOf = (d: Dish): DishState =>
+  !d.visible ? "hidden" : d.off_week ? "offweek" : d.sold_out ? "soldout" : "available";
 
 export default async function MenuPage() {
   await requireAdmin();
@@ -22,6 +24,7 @@ export default async function MenuPage() {
       <Link href="/admin/menu/new" className={`${btnPrimary} mb-4 w-full`}>+ מנה חדשה</Link>
       <p className="mb-3 text-sm text-stone-600">
         <b>מוצגת</b>: אפשר להזמין. <b>נגמרה</b>: הלקוח רואה אותה עם הסימון ״נגמר״ ולא יכול להזמין.{" "}
+        <b>לא השבוע</b>: מופיעה בסוף התפריט, תחת ״מהתפריט המתחלף שלנו״, ואי אפשר להזמין.{" "}
         <b>מוסתרת</b>: לא מופיעה ללקוחות, אבל נשארת שמורה כאן. החיצים משנים את סדר המנות באתר.
       </p>
       {dishes.length === 0 && <p className={`${card} p-6 text-center text-stone-500`}>עדיין אין מנות</p>}
@@ -62,12 +65,12 @@ export default async function MenuPage() {
                   })}
                 </div>
               </div>
-              <div className="mt-2.5 grid grid-cols-3 gap-1 rounded-xl bg-stone-100 p-1" role="group" aria-label={`${d.name}: מצב`}>
+              <div className="mt-2.5 grid grid-cols-4 gap-1 rounded-xl bg-stone-100 p-1" role="group" aria-label={`${d.name}: מצב`}>
                 {states.map((s) => (
                   <form key={s.key} action={setDishState.bind(null, d.id, s.key)}>
                     <button
                       aria-pressed={current === s.key}
-                      className={`w-full rounded-lg py-1.5 text-sm font-medium ${current === s.key ? s.on : "text-stone-600"}`}
+                      className={`w-full whitespace-nowrap rounded-lg px-0.5 py-1.5 text-sm font-medium ${current === s.key ? s.on : "text-stone-600"}`}
                     >
                       {s.label}
                     </button>

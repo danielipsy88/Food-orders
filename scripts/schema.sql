@@ -66,3 +66,6 @@ create table if not exists visits (
 
 -- A sold-out dish stays on the customer menu but cannot be ordered.
 alter table dishes add column if not exists sold_out boolean not null default false;
+
+-- A dish the business makes, but not this week: shown at the end of the menu for variety, cannot be ordered.
+alter table dishes add column if not exists off_week boolean not null default false;

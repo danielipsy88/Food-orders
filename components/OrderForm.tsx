@@ -42,7 +42,10 @@ export default function OrderForm({
     initialDay?.times.includes(initial?.time ?? "") ? initial!.time : "",
   );
 
-  const chosen = useMemo(() => dishes.filter((d) => !d.sold_out && qty[d.id] > 0), [dishes, qty]);
+  const chosen = useMemo(
+    () => dishes.filter((d) => !d.sold_out && !d.off_week && qty[d.id] > 0),
+    [dishes, qty],
+  );
   const count = chosen.reduce((n, d) => n + qty[d.id], 0);
   const total = chosen.reduce((n, d) => n + qty[d.id] * d.price, 0);
 
@@ -71,79 +74,98 @@ export default function OrderForm({
     });
   }
 
+  const week = dishes.filter((d) => !d.off_week);
+  const rotating = dishes.filter((d) => d.off_week);
+
+  const row = (d: Dish) => {
+    const n = qty[d.id] ?? 0;
+    return (
+      <li
+        key={d.id}
+        className={`${card} flex gap-3 p-3 ${n ? "border-brand/60" : ""} ${d.sold_out ? "opacity-60" : ""} ${d.off_week ? "bg-stone-50" : ""}`}
+      >
+        {d.has_image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/img/${d.id}?v=${d.v}`}
+            alt=""
+            loading="lazy"
+            className={`size-24 shrink-0 rounded-xl object-cover ${d.off_week ? "saturate-50" : ""}`}
+          />
+        ) : (
+          <div className="flex size-24 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-3xl">
+            🍽️
+          </div>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h3 className="font-semibold leading-tight">{d.name}</h3>
+          {d.description && (
+            <p className="mt-0.5 text-sm leading-snug text-stone-600">{d.description}</p>
+          )}
+          <div className="mt-auto flex items-center justify-between pt-2">
+            {d.off_week ? <span /> : <span className="font-semibold text-brand">{money(d.price)}</span>}
+            {d.off_week ? (
+              <span className="rounded-full bg-[#efe8f3] px-3 py-1.5 text-sm font-semibold text-[#6b4f7a]">
+                בשבוע אחר
+              </span>
+            ) : d.sold_out ? (
+              <span className="rounded-full bg-stone-200 px-3 py-1.5 text-sm font-semibold text-stone-600">
+                נגמר
+              </span>
+            ) : n === 0 ? (
+              <button
+                type="button"
+                onClick={() => change(d.id, 1)}
+                className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white"
+              >
+                הוספה
+              </button>
+            ) : (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label={`פחות ${d.name}`}
+                  onClick={() => change(d.id, -1)}
+                  className="size-9 rounded-full border border-stone-300 bg-white text-xl leading-none"
+                >
+                  −
+                </button>
+                <span className="w-7 text-center font-semibold" aria-live="polite">
+                  {n}
+                </span>
+                <button
+                  type="button"
+                  aria-label={`עוד ${d.name}`}
+                  onClick={() => change(d.id, 1)}
+                  className="size-9 rounded-full bg-brand text-xl leading-none text-white"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  };
+
   return (
     <form onSubmit={submit} className="pb-28">
-      <ul className="space-y-3">
-        {dishes.map((d) => {
-          const n = qty[d.id] ?? 0;
-          return (
-            <li
-              key={d.id}
-              className={`${card} flex gap-3 p-3 ${n ? "border-brand/60" : ""} ${d.sold_out ? "opacity-60" : ""}`}
-            >
-              {d.has_image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={`/img/${d.id}?v=${d.v}`}
-                  alt=""
-                  loading="lazy"
-                  className="size-24 shrink-0 rounded-xl object-cover"
-                />
-              ) : (
-                <div className="flex size-24 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-3xl">
-                  🍽️
-                </div>
-              )}
-              <div className="flex min-w-0 flex-1 flex-col">
-                <h3 className="font-semibold leading-tight">{d.name}</h3>
-                {d.description && (
-                  <p className="mt-0.5 text-sm leading-snug text-stone-600">{d.description}</p>
-                )}
-                <div className="mt-auto flex items-center justify-between pt-2">
-                  <span className="font-semibold text-brand">{money(d.price)}</span>
-                  {d.sold_out ? (
-                    <span className="rounded-full bg-stone-200 px-3 py-1.5 text-sm font-semibold text-stone-600">
-                      נגמר
-                    </span>
-                  ) : n === 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => change(d.id, 1)}
-                      className="rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-white"
-                    >
-                      הוספה
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        aria-label={`פחות ${d.name}`}
-                        onClick={() => change(d.id, -1)}
-                        className="size-9 rounded-full border border-stone-300 bg-white text-xl leading-none"
-                      >
-                        −
-                      </button>
-                      <span className="w-7 text-center font-semibold" aria-live="polite">
-                        {n}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label={`עוד ${d.name}`}
-                        onClick={() => change(d.id, 1)}
-                        className="size-9 rounded-full bg-brand text-xl leading-none text-white"
-                      >
-                        +
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {week.length > 0 ? (
+        <ul className="space-y-3">{week.map(row)}</ul>
+      ) : (
+        <p className={`${card} p-6 text-center text-lg`}>התפריט של השבוע עוד לא עלה. נחזור בקרוב!</p>
+      )}
 
-      <div ref={detailsRef} className={`${card} mt-6 scroll-mt-4 space-y-4 p-4`}>
+      {rotating.length > 0 && (
+        <section className="mt-8 border-t border-dashed border-stone-300 pt-5" aria-labelledby="rotating-title">
+          <h2 id="rotating-title" className="text-lg font-bold">מהתפריט המתחלף שלנו</h2>
+          <p className="mb-3 text-sm text-stone-600">מנות שמופיעות אצלנו מדי פעם. לא מוכנות השבוע.</p>
+          <ul className="space-y-3">{rotating.map(row)}</ul>
+        </section>
+      )}
+
+      <div ref={detailsRef} hidden={week.length === 0} className={`${card} mt-6 scroll-mt-4 space-y-4 p-4`}>
         <h2 className="text-lg font-bold">פרטי ההזמנה</h2>
 
         {count > 0 && (

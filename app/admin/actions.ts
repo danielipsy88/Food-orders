@@ -75,12 +75,13 @@ export async function saveDish(input: DishInput): Promise<string | null> {
   redirect("/admin/menu");
 }
 
-export type DishState = "available" | "soldout" | "hidden";
+export type DishState = "available" | "soldout" | "offweek" | "hidden";
 
 export async function setDishState(id: number, state: DishState) {
   await requireAdmin();
   await sql`
     update dishes set visible = ${state !== "hidden"}, sold_out = ${state === "soldout"},
+      off_week = ${state === "offweek"},
       updated_at = now()
     where id = ${id}`;
   revalidatePath("/", "layout");

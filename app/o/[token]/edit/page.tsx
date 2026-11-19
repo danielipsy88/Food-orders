@@ -17,7 +17,7 @@ export default async function EditOrder({ params }: PageProps<"/o/[token]/edit">
   if (!order) notFound();
   if (!order.editable) redirect(`/o/${order.token}`);
 
-  const available = new Set(dishes.filter((d) => !d.sold_out).map((d) => d.id));
+  const available = new Set(dishes.filter((d) => !d.sold_out && !d.off_week).map((d) => d.id));
   const items = Object.fromEntries(
     order.items.filter((i) => available.has(i.dish_id)).map((i) => [i.dish_id, i.qty]),
   );
