@@ -24,7 +24,7 @@ export default async function MenuPage() {
       <Link href="/admin/menu/new" className={`${btnPrimary} mb-4 w-full`}>+ מנה חדשה</Link>
       <p className="mb-3 text-sm text-stone-600">
         <b>מוצגת</b>: אפשר להזמין. <b>נגמרה</b>: הלקוח רואה אותה עם הסימון ״נגמר״ ולא יכול להזמין.{" "}
-        <b>לא השבוע</b>: מופיעה בסוף התפריט, תחת ״מהתפריט המתחלף שלנו״, ואי אפשר להזמין.{" "}
+        <b>לא השבוע</b>: מופיעה בסוף התפריט, תחת ״מנות נוספות״, ואי אפשר להזמין.{" "}
         <b>מוסתרת</b>: לא מופיעה ללקוחות, אבל נשארת שמורה כאן. החיצים משנים את סדר המנות באתר.
       </p>
       {dishes.length === 0 && <p className={`${card} p-6 text-center text-stone-500`}>עדיין אין מנות</p>}

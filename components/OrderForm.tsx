@@ -159,8 +159,8 @@ export default function OrderForm({
 
       {rotating.length > 0 && (
         <section className="mt-8 border-t border-dashed border-stone-300 pt-5" aria-labelledby="rotating-title">
-          <h2 id="rotating-title" className="text-lg font-bold">מהתפריט המתחלף שלנו</h2>
-          <p className="mb-3 text-sm text-stone-600">מנות שמופיעות אצלנו מדי פעם. לא מוכנות השבוע.</p>
+          <h2 id="rotating-title" className="text-lg font-bold">מנות נוספות</h2>
+          <p className="mb-3 text-sm text-stone-600">לא נמכרות השבוע</p>
           <ul className="space-y-3">{rotating.map(row)}</ul>
         </section>
       )}
